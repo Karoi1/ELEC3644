@@ -121,28 +121,22 @@ class UserDataBase{
         }
         saveUserData(users: listUserData)
     }
-    
-    func saveUserData(users: [UserData]) {
-        guard let url = Bundle.main.url(forResource: "UserData", withExtension: "json") else {
-                    print("User JSON file not found.")
-                    return
-            }
-            
-            do {
-                print("Load User Json success.")
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = .prettyPrinted // 美化输出
-                let data = try encoder.encode(users)
-                try data.write(to: url)
-            } catch {
-                print("Error writing user data: \(error)")
-            }
-    }
-
-    // 获取应用的文档目录
-    func getDocumentsDirectory() -> URL {
+    private func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
+    }
+    func saveUserData(users: [UserData]) {
+        let url = getDocumentsDirectory().appendingPathComponent("UserData.json")
+
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted // 美化输出
+            let data = try encoder.encode(users)
+            try data.write(to: url)
+            print("User data saved successfully.")
+        } catch {
+            print("Error writing user data: \(error)")
+        }
     }
 }
 
@@ -205,11 +199,108 @@ struct UserView: View{
     }
 }
 
+
+import SwiftUI
+
+struct RegisterView: View {
+    @ObservedObject var user: User
+    @State private var inputUserName: String = ""
+    @State private var inputPassWord: String = ""
+    @State private var confirmPassWord: String = "" // 新增确认密码输入
+    @State private var registrationSuccess: Bool = false
+    @State private var passwordsUnMatch: Bool = false // 检查密码是否匹配
+
+    func register() {
+        // 检查密码是否匹配
+        guard inputPassWord == confirmPassWord else {
+            passwordsUnMatch = true
+            return
+        }
+
+        // 创建 UserData 对象并设置 ID 为 10
+        let newUserData = UserDataBase.UserData(id: 10, name: inputUserName, password: inputPassWord, favourites: [], history: [])
+
+        // 在 User 对象中保存用户信息
+        user.state = .online
+        user.id = newUserData.id
+        user.name = newUserData.name
+        user.favs = newUserData.favourites
+        user.history = newUserData.history
+        
+        // 注册成功
+        registrationSuccess = true
+        
+        inputUserName = ""
+        inputPassWord = ""
+        confirmPassWord = ""
+        passwordsUnMatch = false
+    }
+    var body: some View {
+        NavigationView {
+            VStack(spacing:5){
+                Text("Register")
+                    .font(.title)
+                    .padding(.vertical, 10)
+                HStack {
+                    Spacer()
+                    Text("User Name:").padding(.horizontal, 10)
+                    TextField("User", text:$inputUserName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal, 20)
+                    Spacer()
+                }
+                .background(Color.white.opacity(0.2))
+                
+                HStack {
+                    Spacer()
+                    Text("Password:   ").padding(.horizontal,10)
+                    SecureField("Password", text:$inputPassWord)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal, 20)
+                    Spacer()
+                }
+                .background(Color.white.opacity(0.2))
+                HStack {
+                    Spacer()
+                    Text("Confirm:      ").padding(.horizontal,10)
+                    SecureField("Password", text:$confirmPassWord)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal, 20)
+                    Spacer()
+                }
+                .background(Color.white.opacity(0.2))
+                
+                Button(action: {
+                                register()
+                            }) {
+                                HStack {
+                                    Text("Register Now")
+                                        .font(.headline)
+                                    Image(systemName: "paperplane.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                }
+                                .padding()
+                                .background(Color.blue.opacity(0.8))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                }
+                            .padding(.vertical, 10)
+            }
+        }
+        .alert(isPresented:$passwordsUnMatch){
+            Alert(title: Text("Confirm Password"), message: Text("2 Inputted Passwords are not the same"), dismissButton: .default(Text("OK")))
+        }
+    }
+}
+
 struct LoginView: View {
     @ObservedObject var user: User
     @State var inputUserName: String = ""
     @State var inputPassWord: String = ""
     @State var wronginfo: Bool = false
+    @State private var showRegisterView: Bool = false
     var onLoginSuccess: () -> Void
     
     func tryLogin(){
@@ -268,7 +359,11 @@ struct LoginView: View {
                                 .cornerRadius(10)
                 }
                             .padding(.vertical, 10)
-
+                NavigationLink(destination: RegisterView(user: user)) {
+                    Text("Do not have an account? Register now")
+                }
+                .padding(.vertical, 10)
+                
             }
         }
         .alert(isPresented:$wronginfo){
