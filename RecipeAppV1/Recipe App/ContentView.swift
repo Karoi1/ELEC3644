@@ -398,6 +398,8 @@ struct LoginView: View {
                 .padding(.vertical, 10)
                 
             }
+            .navigationTitle("Login")
+            
         }
         .alert(isPresented:$wronginfo){
             Alert(title: Text("Wrong Information"), message: Text("Please check your Username and Password"), dismissButton: .default(Text("OK")))
@@ -451,6 +453,7 @@ struct OnlineView: View{
                     }
                     .padding()
                     .contentShape(Rectangle())
+                    
                 }
                 .buttonStyle(PlainButtonStyle())
                                 
@@ -470,6 +473,22 @@ struct OnlineView: View{
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(PlainButtonStyle())
+                
+                // NavigationLink for MyRecipe
+                NavigationLink(destination: MyRecipeView(user: user)) {
+                    HStack {
+                        Image(systemName: "book.fill")
+                            .foregroundColor(.green)
+                        Text("My Recipe")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                    .contentShape(Rectangle())
+                }
                 
                 Text("setting navigationlink here")
                 
@@ -493,6 +512,7 @@ struct OnlineView: View{
                     .padding(.vertical, 10)
                     
             }
+            .navigationTitle("Personal")
         }
         .alert(isPresented: $LogoutSuccess){
             Alert(title: Text("Logout"), message: Text("Successfully logout"), dismissButton: .default(Text("OK")))
@@ -507,6 +527,7 @@ struct AddRecipeView: View {
     @State private var tags: [String] = [""]
     @State private var ingredients: [String] = [""]
     @State private var steps: [String] = [""]
+    var onSuccess : () -> Void
     
     var body: some View {
         NavigationView {
@@ -645,6 +666,7 @@ struct AddRecipeView: View {
         newRecipe.steps = steps.filter { !$0.isEmpty }
         
         // 这里可以添加代码将食谱保存为 JSON 或存储到您的数据源
+        onSuccess()
         print("Recipe saved: \(newRecipe)")
     }
 }
@@ -661,10 +683,11 @@ struct MyRecipeView: View{
                 .navigationBarItems(trailing: Button(action: {
                                 showingAddRecipe = true
                             }) {
+                                Text("Add Recipe")
                                 Image(systemName: "plus")
                             })
                             .sheet(isPresented: $showingAddRecipe) {
-                                AddRecipeView(newRecipe: newRecipe)
+                                AddRecipeView(newRecipe: newRecipe,onSuccess:{showingAddRecipe = false})
                             }
         }
     }

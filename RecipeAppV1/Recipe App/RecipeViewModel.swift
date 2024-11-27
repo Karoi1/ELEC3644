@@ -1,12 +1,19 @@
 import Foundation
 
 
-struct Recipe: Identifiable, Codable {
+class Recipe: Identifiable, Codable, ObservableObject {
     var id: Int
     var name: String
     var tags: [String]
     var ingredients: [String]
     var steps:[String]
+    init(id: Int, name: String, tags: [String] = [], ingredients: [String] = [], steps: [String] = []) {
+            self.id = id
+            self.name = name
+            self.tags = tags
+            self.ingredients = ingredients
+            self.steps = steps
+        }
 }
 
 
