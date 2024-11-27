@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SearchView: View {
+    @ObservedObject var user: User
     @ObservedObject var photoModel: PhotoModel
     @State private var searchText: String = ""
     @StateObject var viewModel = RecipeViewModel()
@@ -75,8 +76,9 @@ struct SearchView: View {
                     
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 20) {
+                            //TO Change: User() -> user
                             ForEach(results) { recipe in
-                                NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                                NavigationLink(destination: RecipeDetailView(user:user,recipe: recipe)) {
                                     RecipeRowView(recipe: recipe)
                                 }
                             }
