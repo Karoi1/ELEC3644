@@ -23,7 +23,7 @@ struct RecipeListView: View {
 
             LazyVGrid(columns: columns, spacing: 20) {
                 ForEach(recipeViewModel.search(ListID: recipeID)) { recipe in
-                    NavigationLink(destination: RecipeDetailView(user:user,recipe: recipe)) {
+                    NavigationLink(destination: RecipeDetailView(user:user,recipe: recipe, isPreview: false)) {
                         RecipeRowView(recipe: recipe)
                     }
                 }

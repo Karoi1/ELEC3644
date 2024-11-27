@@ -5,6 +5,7 @@ import AudioToolbox
 struct RecipeDetailView: View {
     @ObservedObject var user: User
     @State var recipe: Recipe
+    var isPreview: Bool
     @State private var checkedIngredients: Set<String> = []
     @State private var checkedSteps: Set<String> = []
     
@@ -102,9 +103,12 @@ struct RecipeDetailView: View {
                             isFavorite = user.favs.contains(recipe.id)
                         }
                         .onDisappear {
-                            updateFavorites()
-                            updateHistory()
-                            UserDataBase().updateUserData(for:user)
+                            if !isPreview{
+                                updateFavorites()
+                                updateHistory()
+                                UserDataBase().updateUserData(for:user)
+                            }
+                            
                         }
                         .sheet(isPresented: $ToLoginView){
                             UserView(user: user,onLoginSuccess:{ToLoginView=false})

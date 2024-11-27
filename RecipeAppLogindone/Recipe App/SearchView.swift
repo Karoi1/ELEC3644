@@ -78,7 +78,7 @@ struct SearchView: View {
                         LazyVGrid(columns: columns, spacing: 20) {
                             //TO Change: User() -> user
                             ForEach(results) { recipe in
-                                NavigationLink(destination: RecipeDetailView(user:user,recipe: recipe)) {
+                                NavigationLink(destination: RecipeDetailView(user:user,recipe: recipe,isPreview: false)) {
                                     RecipeRowView(recipe: recipe)
                                 }
                             }

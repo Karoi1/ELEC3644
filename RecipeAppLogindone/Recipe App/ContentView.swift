@@ -533,6 +533,9 @@ struct AddRecipeView: View {
     @State private var tags: [String] = [""]
     @State private var ingredients: [String] = [""]
     @State private var steps: [String] = [""]
+    var newRecipe: Recipe {
+        Recipe(id: RecipeViewModel().findSpace(), name: recipeName, tags: tags.filter { !$0.isEmpty }, ingredients: ingredients.filter { !$0.isEmpty }, steps: steps.filter { !$0.isEmpty })
+    }
     @Environment(\.presentationMode) var presenMode
     
 
@@ -627,6 +630,12 @@ struct AddRecipeView: View {
             .disabled(recipeName.isEmpty || tags.contains(where: { $0.isEmpty }) || ingredients.contains(where: { $0.isEmpty }) || steps.contains(where: { $0.isEmpty }))
         }
         .navigationTitle("Design Your Recipe")
+        .navigationBarItems(trailing: NavigationLink(destination: RecipeDetailView(user:user, recipe:newRecipe,isPreview:true)) {
+            Text("Preview Recipe")
+            Image(systemName: "plus")
+                
+            })
+                        
     }
     
     private func addTag() {
@@ -660,7 +669,6 @@ struct AddRecipeView: View {
     }
     
     private func saveRecipe() {
-        let newRecipe = Recipe(id: RecipeViewModel().findSpace(), name: recipeName, tags: tags.filter { !$0.isEmpty }, ingredients: ingredients.filter { !$0.isEmpty }, steps: steps.filter { !$0.isEmpty })
         user.myRecipes.append(newRecipe.id)
         RecipeViewModel().saveRecipe(newRecipe: newRecipe)
         UserDataBase().updateUserData(for: user)
@@ -714,7 +722,7 @@ struct SettingsView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         debugView()
-        AddRecipeView(user:User())
+        //AddRecipeView(user:User())
         ContentView()
         //MyRecipeView(user: )
         //AddRecipeView(newRecipe:Recipe(id: 0, name: "", tags: [], ingredients: [], steps: []))
