@@ -2,6 +2,7 @@ import SwiftUI
 import UserNotifications
 
 struct RecipeDetailView: View {
+    @ObservedObject var user: User
     @State var recipe: Recipe
     @State private var checkedIngredients: Set<String> = []
     @State private var checkedSteps: Set<String> = []
@@ -17,14 +18,48 @@ struct RecipeDetailView: View {
     @State private var selectedHours: Int = 0
     @State private var selectedMinutes: Int = 0
     @State private var selectedSeconds: Int = 0
-
+    @State private var isFavorite: Bool = false
+    
+    private func updateFavorites() {
+        if isFavorite {
+            // 如果是收藏状态，确保 recipe id 在 favs 中
+            if !user.favs.contains(recipe.id) {
+                user.favs.append(recipe.id)
+            }
+        } else {
+            // 如果不是收藏状态，确保 recipe id 不在 favs 中
+            user.favs.removeAll { $0 == recipe.id }
+        }
+        user.userDataBase.updateUserData(for:user)
+    }
+    
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Recipe Name
-                Text(recipe.name)
-                    .font(.largeTitle)
-                    .fontWeight(.bold) // Thickened title
+                // Recipe Name and Favorite Button
+                HStack {
+                    Text(recipe.name)
+                        .font(.largeTitle)
+                        .fontWeight(.bold) // Thickened title
+                    
+                    Spacer() // Push the button to the right
+                    
+                    Button(action: {
+                        // Handle favorite action here
+                        isFavorite.toggle()
+                    }) {
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                            .font(.title2)
+                            .foregroundColor(.red)// Color of the heart
+                    }
+                }
+                .onAppear {
+                    isFavorite = user.favs.contains(recipe.id)
+                }
+                .onDisappear {
+                    updateFavorites()
+                }
 
                 // Tags
                 HStack {
@@ -41,7 +76,7 @@ struct RecipeDetailView: View {
                 Image(String(imageName))
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(height: 200)
+                    .frame(height: 300)
                     .clipped()
                     .padding(.bottom, 10)
 
@@ -170,5 +205,5 @@ struct RecipeDetailView: View {
 }
 
 #Preview {
-    RecipeListView()
+    ContentView()
 }
