@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 struct ContentView: View {
     @StateObject var user = User()
@@ -42,30 +43,109 @@ enum UserState{
 
 
 
+struct LoginResult {
+    var id: Int
+    var favs: [Int]
+    var history: [Int]
+}
+
+
+class UserDataBase{
+    private class User: Decodable{
+        var id: Int
+        var name: String
+        var password: String
+        var favourites: [Int]
+        var history: [Int]
+        
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case name
+            case password
+            case favourites
+            case history
+        }
+        
+        init(id: Int, name: String, password: String, favourites: [Int], history: [Int]) {
+                    self.id = id
+                    self.name = name
+                    self.password = password
+                    self.favourites = favourites
+                    self.history = history
+        }
+        
+        
+        
+    }
+    private var listUser: [User] = []
+    init(){
+        loadUserFromJson()
+    }
+    
+    private func loadUserFromJson(){
+        guard let url = Bundle.main.url(forResource: "UserData", withExtension: "json") else {
+                    print("User JSON file not found.")
+                    return
+                }
+                
+                do {
+                    print("Load User Json success.")
+                    let data = try Data(contentsOf: url)
+                    let users = try JSONDecoder().decode([User].self, from: data)
+                    self.listUser = users
+                } catch {
+                    print("Error loading or decoding user data: \(error)")
+                }
+    }
+    func validateUser(username: String, password: String) -> LoginResult {
+            for user in listUser {
+                if user.name == username && user.password == password {
+                    return LoginResult(id: user.id, favs: user.favourites, history: user.history)
+                }
+            }
+            return LoginResult(id: -1, favs: [], history: []) // 登录失败
+        }
+}
+
+
 class User: ObservableObject{
     @Published var state: UserState = .offline
     @Published var id: Int = 0
     @Published var name: String = ""
+    @Published var favs: [Int] = []
+    @Published var history: [Int] = []
+    private var userDataBase: UserDataBase = UserDataBase()
+    
+    
     init(){
         self.state = .offline
         self.id = -1
         self.name = "N/A"
+        self.favs = []
+        self.history = []
     }
     func login(inputUserName: String, inputPassWord: String){
         //check username,password in database
         print("login")
-        if inputUserName == "Cecilia" && inputPassWord == "123"{
-            self.state = .online
-            self.id = 1
-            self.name = inputUserName
-            print("login success")
-        }
+        let result = userDataBase.validateUser(username: inputUserName, password: inputPassWord)
+                if result.id != -1 {
+                    self.state = .online
+                    self.id = result.id
+                    self.name = inputUserName
+                    self.favs = result.favs
+                    self.history = result.history
+                    print("login success")
+                } else {
+                    print("Invalid username or password")
+                }
         
     }
     func logout(){
         self.state = .offline
         self.id = -1
         self.name = "N/A"
+        self.favs = []
+        self.history = []
         print("logout")
     }
     
@@ -162,6 +242,8 @@ struct LoginView: View {
 struct OnlineView: View{
     @ObservedObject var user: User
     @State var LogoutSuccess: Bool = false
+    var viewModel = RecipeViewModel()
+    
     
     func tryLogout(){
         user.logout()
@@ -173,16 +255,56 @@ struct OnlineView: View{
     var body: some View{
         NavigationView{
             VStack{
-                Image("person.fill")
+                Image(systemName: "person.fill")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 60, height: 60) // 调整大小
+                    .padding() // 额外的内边距
+                    .background(Color.blue.opacity(0.2)) // 背景颜色
+                    .clipShape(Circle()) // 圆形剪裁
+                    .overlay(Circle().stroke(Color.blue, lineWidth: 2)) // 边框
+                    .shadow(radius: 5) // 阴影效果
+
                 Text("\(user.name)")
                     .font(.headline)
                 Divider()
                     .padding(10)
-                Text("two navigationlink here,fav/hist")
+                // NavigationLink for Favourites
+                NavigationLink(destination: RecipeListView(recipeID: user.favs)) {
+                    HStack {
+                        Image(systemName: "heart.fill") // 爱心图标
+                            .foregroundColor(.red)
+                        Text("View Favourites")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right") // 右箭头图标
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                    .contentShape(Rectangle()) // 增加点击区域
+                }
+                .buttonStyle(PlainButtonStyle())
+                                
+                // NavigationLink for History
+                NavigationLink(destination: RecipeListView(recipeID: user.history)) {
+                    HStack {
+                        Image(systemName: "clock.fill") // 时钟图标
+                            .foregroundColor(.blue)
+                        Text("View History")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right") // 右箭头图标
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                    .contentShape(Rectangle()) // 增加点击区域
+                }
+                .buttonStyle(PlainButtonStyle())
+                
                 Text("setting navigationlink here")
+                
                 Button(action: {
                     tryLogout()
                             }) {
@@ -210,9 +332,10 @@ struct OnlineView: View{
 }
 
 struct HomeView: View {
+    let list = [1,2,3,4,5,6,7,8,9,10,11]
     var body: some View {
         NavigationView {
-            RecipeListView()
+            RecipeListView(recipeID: list)
                 .navigationTitle("Main menu")
         }
     }
