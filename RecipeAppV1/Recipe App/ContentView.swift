@@ -11,13 +11,13 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab){
-            HomeView()
+            HomeView(user:user)
                 .tabItem {
                     Image(systemName: "house")
                     Text("Main")
                 }
                 .tag(Tab.home)
-            SearchView(photoModel: PhotoModel())
+            SearchView(user:user,photoModel: PhotoModel())
                 .tabItem{
                     Image(systemName: "magnifyingglass")
                     Text("Search")
@@ -51,7 +51,7 @@ struct LoginResult {
 
 
 class UserDataBase{
-    private class User: Decodable{
+    class UserData: Codable{
         var id: Int
         var name: String
         var password: String
@@ -77,7 +77,7 @@ class UserDataBase{
         
         
     }
-    private var listUser: [User] = []
+    private var listUserData: [UserData] = []
     init(){
         loadUserFromJson()
     }
@@ -91,20 +91,59 @@ class UserDataBase{
                 do {
                     print("Load User Json success.")
                     let data = try Data(contentsOf: url)
-                    let users = try JSONDecoder().decode([User].self, from: data)
-                    self.listUser = users
+                    let users = try JSONDecoder().decode([UserData].self, from: data)
+                    self.listUserData = users
                 } catch {
                     print("Error loading or decoding user data: \(error)")
                 }
     }
+    
     func validateUser(username: String, password: String) -> LoginResult {
-            for user in listUser {
-                if user.name == username && user.password == password {
-                    return LoginResult(id: user.id, favs: user.favourites, history: user.history)
-                }
+        for user in listUserData {
+            if user.name == username && user.password == password {
+                return LoginResult(id: user.id, favs: user.favourites, history: user.history)
             }
-            return LoginResult(id: -1, favs: [], history: []) // 登录失败
         }
+        return LoginResult(id: -1, favs: [], history: []) // 登录失败
+    }
+    func updateUserData(for user: User) {
+        // 查找与 user.id 匹配的 UserData
+        if let index = listUserData.firstIndex(where: { $0.id == user.id }) {
+            // 更新 UserData 的属性
+            listUserData[index].name = user.name
+            listUserData[index].favourites = user.favs
+            listUserData[index].history = user.history
+            
+            print("User data updated for user ID: \(user.id)")
+        } else {
+            // 如果没有找到，可能需要添加新用户或处理错误
+            print("User with ID \(user.id) not found in userDataList.")
+        }
+        saveUserData(users: listUserData)
+    }
+    
+    func saveUserData(users: [UserData]) {
+        guard let url = Bundle.main.url(forResource: "UserData", withExtension: "json") else {
+                    print("User JSON file not found.")
+                    return
+            }
+            
+            do {
+                print("Load User Json success.")
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .prettyPrinted // 美化输出
+                let data = try encoder.encode(users)
+                try data.write(to: url)
+            } catch {
+                print("Error writing user data: \(error)")
+            }
+    }
+
+    // 获取应用的文档目录
+    func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
+    }
 }
 
 
@@ -114,7 +153,7 @@ class User: ObservableObject{
     @Published var name: String = ""
     @Published var favs: [Int] = []
     @Published var history: [Int] = []
-    private var userDataBase: UserDataBase = UserDataBase()
+    var userDataBase: UserDataBase = UserDataBase()
     
     
     init(){
@@ -258,48 +297,49 @@ struct OnlineView: View{
                 Image(systemName: "person.fill")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 60, height: 60) // 调整大小
-                    .padding() // 额外的内边距
-                    .background(Color.blue.opacity(0.2)) // 背景颜色
-                    .clipShape(Circle()) // 圆形剪裁
-                    .overlay(Circle().stroke(Color.blue, lineWidth: 2)) // 边框
-                    .shadow(radius: 5) // 阴影效果
+                    .frame(width: 60, height: 60)
+                    .padding()
+                    .background(Color.blue.opacity(0.2))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                    .shadow(radius: 5)
 
                 Text("\(user.name)")
                     .font(.headline)
                 Divider()
                     .padding(10)
+                
                 // NavigationLink for Favourites
-                NavigationLink(destination: RecipeListView(recipeID: user.favs)) {
+                NavigationLink(destination: RecipeListView(user:user,recipeID: user.favs)) {
                     HStack {
-                        Image(systemName: "heart.fill") // 爱心图标
+                        Image(systemName: "heart.fill")
                             .foregroundColor(.red)
                         Text("View Favourites")
                             .font(.headline)
                             .foregroundColor(.primary)
                         Spacer()
-                        Image(systemName: "chevron.right") // 右箭头图标
+                        Image(systemName: "chevron.right")
                             .foregroundColor(.gray)
                     }
                     .padding()
-                    .contentShape(Rectangle()) // 增加点击区域
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(PlainButtonStyle())
                                 
                 // NavigationLink for History
-                NavigationLink(destination: RecipeListView(recipeID: user.history)) {
+                NavigationLink(destination: RecipeListView(user: user, recipeID: user.history)) {
                     HStack {
-                        Image(systemName: "clock.fill") // 时钟图标
+                        Image(systemName: "clock.fill")
                             .foregroundColor(.blue)
                         Text("View History")
                             .font(.headline)
                             .foregroundColor(.primary)
                         Spacer()
-                        Image(systemName: "chevron.right") // 右箭头图标
+                        Image(systemName: "chevron.right")
                             .foregroundColor(.gray)
                     }
                     .padding()
-                    .contentShape(Rectangle()) // 增加点击区域
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(PlainButtonStyle())
                 
@@ -307,21 +347,22 @@ struct OnlineView: View{
                 
                 Button(action: {
                     tryLogout()
-                            }) {
-                                HStack {
-                                    Text("Logout")
-                                        .font(.headline)
-                                    Image(systemName: "arrow.right.circle.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 20, height: 20)
-                                }
-                                .padding()
-                                .background(Color.blue.opacity(0.8))
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
+                            })
+                {
+                    HStack {
+                        Text("Logout")
+                            .font(.headline)
+                        Image(systemName: "arrow.right.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                    }
+                    .padding()
+                    .background(Color.blue.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 }
-                            .padding(.vertical, 10)
+                    .padding(.vertical, 10)
                     
             }
         }
@@ -332,10 +373,11 @@ struct OnlineView: View{
 }
 
 struct HomeView: View {
+    @ObservedObject var user: User
     let list = [1,2,3,4,5,6,7,8,9,10,11]
     var body: some View {
         NavigationView {
-            RecipeListView(recipeID: list)
+            RecipeListView(user:user,recipeID: list)
                 .navigationTitle("Main menu")
         }
     }
