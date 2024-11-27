@@ -19,18 +19,35 @@ struct RecipeDetailView: View {
     @State private var selectedMinutes: Int = 0
     @State private var selectedSeconds: Int = 0
     @State private var isFavorite: Bool = false
+    @State private var ToLoginView: Bool = false
+    
+    private func updateHistory() {
+        if user.state == .online{
+            // 删除历史记录中所有与当前食谱 ID 匹配的记录
+            user.history.removeAll { $0 == recipe.id }
+
+            // 将当前食谱的 ID 添加到历史记录的第一个索引
+            user.history.insert(recipe.id, at: 0)
+
+            print("Updated history: \(user.history)")
+        }
+
+    }
     
     private func updateFavorites() {
-        if isFavorite {
-            // 如果是收藏状态，确保 recipe id 在 favs 中
-            if !user.favs.contains(recipe.id) {
-                user.favs.append(recipe.id)
+        if user.state == .online{
+            if isFavorite{
+                // 如果是收藏状态，确保 recipe id 在 favs 中
+                if !user.favs.contains(recipe.id) {
+                    user.favs.append(recipe.id)
+                }
+            } else {
+                // 如果不是收藏状态，确保 recipe id 不在 favs 中
+                user.favs.removeAll { $0 == recipe.id }
             }
-        } else {
-            // 如果不是收藏状态，确保 recipe id 不在 favs 中
-            user.favs.removeAll { $0 == recipe.id }
         }
-        user.userDataBase.updateUserData(for:user)
+
+        
     }
     
     
@@ -47,7 +64,13 @@ struct RecipeDetailView: View {
                     
                     Button(action: {
                         // Handle favorite action here
-                        isFavorite.toggle()
+                        if user.state == .online {
+                            isFavorite.toggle()
+                        }
+                        if user.state == .offline {
+                            ToLoginView = true
+                            print("offline will not save favs")
+                        }
                     }) {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
                             .font(.title2)
@@ -59,6 +82,11 @@ struct RecipeDetailView: View {
                 }
                 .onDisappear {
                     updateFavorites()
+                    updateHistory()
+                    user.userDataBase.updateUserData(for:user)
+                }
+                .sheet(isPresented: $ToLoginView){
+                    UserView(user: user,onLoginSuccess:{ToLoginView=false})
                 }
 
                 // Tags
