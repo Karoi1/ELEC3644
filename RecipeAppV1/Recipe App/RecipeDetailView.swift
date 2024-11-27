@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import AudioToolbox
 
 struct RecipeDetailView: View {
     @ObservedObject var user: User
@@ -295,6 +296,9 @@ struct RecipeDetailView: View {
                     t.invalidate()
                     timerLabel = "Time's up!"
                     isTimerRunning = false
+                    
+                    // Play a beep sound
+                    AudioServicesPlaySystemSound(1005)
                 }
             }
         }
