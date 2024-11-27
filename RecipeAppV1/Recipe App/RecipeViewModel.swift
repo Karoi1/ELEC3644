@@ -39,7 +39,7 @@ class RecipeViewModel: ObservableObject {
         do {
             // Step 2: Attempt to load the data from the JSON file
             let data = try Data(contentsOf: url)
-            print("Data loaded successfully from \(url).") // Confirm data loading
+            //print("Data loaded successfully from \(url).") // Confirm data loading
             // Step 3: Decode the data into Recipe objects
             let decoder = JSONDecoder()
             let loadedRecipes = try decoder.decode([Recipe].self, from: data)
@@ -47,9 +47,9 @@ class RecipeViewModel: ObservableObject {
             // Step 4: Assign loaded recipes to the published array
             self.recipes = loadedRecipes
             // Print each recipe name
-            for recipe in loadedRecipes {
-                print("Loaded recipe: \(recipe.name)") // Print the name of each recipe
-            }
+            //for recipe in loadedRecipes {
+                //print("Loaded recipe: \(recipe.name)") // Print the name of each recipe
+            //}
             print("Successfully loaded \(loadedRecipes.count) recipes.") // Confirm number of recipes loaded
         } catch {
             // Step 5: Handle any errors during loading or decoding
