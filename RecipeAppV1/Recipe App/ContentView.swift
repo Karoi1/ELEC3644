@@ -47,6 +47,7 @@ struct LoginResult {
     var id: Int
     var favs: [Int]
     var history: [Int]
+    var myRecipes: [Int]
 }
 
 
@@ -57,6 +58,7 @@ class UserDataBase{
         var password: String
         var favourites: [Int]
         var history: [Int]
+        var myRecipes: [Int]
         
         private enum CodingKeys: String, CodingKey {
             case id
@@ -64,14 +66,16 @@ class UserDataBase{
             case password
             case favourites
             case history
+            case myRecipes
         }
         
-        init(id: Int, name: String, password: String, favourites: [Int], history: [Int]) {
-                    self.id = id
-                    self.name = name
-                    self.password = password
-                    self.favourites = favourites
-                    self.history = history
+        init(id: Int, name: String, password: String, favourites: [Int], history: [Int],myRecipes: [Int]) {
+            self.id = id
+            self.name = name
+            self.password = password
+            self.favourites = favourites
+            self.history = history
+            self.myRecipes = myRecipes
         }
         
         
@@ -90,6 +94,10 @@ class UserDataBase{
             let users = try JSONDecoder().decode([UserData].self, from: data)
             self.listUserData = users
             print("Load User JSON success.")
+            for i in users{
+                print("Username:\"\(i.name)\",Password:\"\(i.password)\",Favourites:\(i.favourites),History:\(i.history),MyRecipes:\(i.myRecipes)")
+            }
+            print(url)
         } catch {
             print("Error loading or decoding user data: \(error.localizedDescription)")
         }
@@ -98,10 +106,10 @@ class UserDataBase{
     func validateUser(username: String, password: String) -> LoginResult {
         for user in listUserData {
             if user.name == username && user.password == password {
-                return LoginResult(id: user.id, favs: user.favourites, history: user.history)
+                return LoginResult(id: user.id, favs: user.favourites, history: user.history, myRecipes: user.myRecipes)
             }
         }
-        return LoginResult(id: -1, favs: [], history: []) // 登录失败
+        return LoginResult(id: -1, favs: [], history: [],myRecipes: []) // 登录失败
     }
     func updateUserData(for user: User) {
         // 查找与 user.id 匹配的 UserData
@@ -110,6 +118,7 @@ class UserDataBase{
             listUserData[index].name = user.name
             listUserData[index].favourites = user.favs
             listUserData[index].history = user.history
+            listUserData[index].myRecipes = user.myRecipes
             
             print("User data updated for user ID: \(user.id)")
         } else {
@@ -140,12 +149,12 @@ class UserDataBase{
         for user in listUserData {
             if user.name == inputName {
                 print("Username '\(inputName)' already exists.")
-                return UserData(id: -1, name: "", password: "", favourites: [], history: []) // 用户名已存在，注册失败
+                return UserData(id: -1, name: "", password: "", favourites: [], history: [],myRecipes: []) // 用户名已存在，注册失败
             }
         }
         
         // 创建新的 UserData 对象
-        let newUser = UserData(id: listUserData.count + 1, name: inputName, password: inputPassword,favourites: [], history: [])
+        let newUser = UserData(id: listUserData.count + 1, name: inputName, password: inputPassword,favourites: [], history: [],myRecipes: [])
         listUserData.append(newUser)
         saveUserData(users: listUserData)
         print("User '\(inputName)' registered successfully.")
@@ -160,6 +169,7 @@ class User: ObservableObject{
     @Published var name: String = ""
     @Published var favs: [Int] = []
     @Published var history: [Int] = []
+    @Published var myRecipes: [Int] = []
     var userDataBase: UserDataBase = UserDataBase()
     
     
@@ -169,6 +179,7 @@ class User: ObservableObject{
         self.name = "N/A"
         self.favs = []
         self.history = []
+        self.myRecipes = []
     }
     func login(inputUserName: String, inputPassWord: String){
         //check username,password in database
@@ -180,6 +191,7 @@ class User: ObservableObject{
                     self.name = inputUserName
                     self.favs = result.favs
                     self.history = result.history
+                    self.myRecipes = result.myRecipes
                     print("login success")
                 } else {
                     print("Invalid username or password")
@@ -488,6 +500,177 @@ struct OnlineView: View{
     }
 }
 
+struct AddRecipeView: View {
+    //TODO: add a image picker
+    @ObservedObject var newRecipe: Recipe
+    @State private var recipeName: String = ""
+    @State private var tags: [String] = [""]
+    @State private var ingredients: [String] = [""]
+    @State private var steps: [String] = [""]
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Recipe Name")) {
+                    TextField("Enter recipe name", text: $recipeName)
+                }
+                
+                Section(header: Text("Tags")) {
+                    ForEach(tags.indices, id: \.self) { index in
+                        HStack {
+                            Button(action: {
+                                removeTag(at: index)
+                            }) {
+                                Image(systemName: "minus.circle")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
+                            
+                            TextField("Tag", text: $tags[index])
+                        }
+                    }
+                    
+                    // 空标签输入框和加号按钮
+                    HStack {
+                        Button(action: addTag) {
+                            Image(systemName: "plus.circle")
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        
+                        Text("Add a new tag")
+                            .opacity(0.2)
+                            .onSubmit {
+                                addTag()
+                            }
+                    }
+                }
+                
+                Section(header: Text("Ingredients")) {
+                    ForEach(ingredients.indices, id: \.self) { index in
+                        HStack {
+                            Button(action: {
+                                removeIngredient(at: index)
+                            }) {
+                                Image(systemName: "minus.circle")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
+                            
+                            TextField("Ingredient", text: $ingredients[index])
+                        }
+                    }
+                    
+                    // 空成分输入框和加号按钮
+                    HStack {
+                        Button(action: addIngredient) {
+                            Image(systemName: "plus.circle")
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        
+                        Text("Add a new ingredient")
+                            .opacity(0.2)
+                            .onSubmit {
+                                addIngredient()
+                            }
+                    }
+                }
+                
+                Section(header: Text("Steps")) {
+                    ForEach(steps.indices, id: \.self) { index in
+                        HStack {
+                            Button(action: {
+                                removeStep(at: index)
+                            }) {
+                                Image(systemName: "minus.circle")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
+                            
+                            TextField("Step", text: $steps[index])
+                        }
+                    }
+                    
+                    // 空步骤输入框和加号按钮
+                    HStack {
+                        Button(action: addStep) {
+                            Image(systemName: "plus.circle")
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        
+                        Text("Add a new step")
+                            .opacity(0.2)
+                            .onSubmit {
+                                addStep()
+                            }
+                    }
+                }
+                
+                Button(action: saveRecipe) {
+                    Text("Save Recipe")
+                }
+                .disabled(recipeName.isEmpty || tags.contains(where: { $0.isEmpty }) || ingredients.contains(where: { $0.isEmpty }) || steps.contains(where: { $0.isEmpty }))
+            }
+            .navigationTitle("Add Recipe")
+        }
+    }
+    
+    private func addTag() {
+        tags.append("")
+    }
+    
+    private func removeTag(at index: Int) {
+        tags.remove(at: index)
+    }
+    
+    private func addIngredient() {
+        ingredients.append("")
+    }
+    
+    private func removeIngredient(at index: Int) {
+        ingredients.remove(at: index)
+    }
+    
+    private func addStep() {
+        steps.append("")
+    }
+    
+    private func removeStep(at index: Int) {
+        steps.remove(at: index)
+    }
+    
+    private func saveRecipe() {
+        newRecipe.name = recipeName
+        newRecipe.tags = tags.filter { !$0.isEmpty }
+        newRecipe.ingredients = ingredients.filter { !$0.isEmpty }
+        newRecipe.steps = steps.filter { !$0.isEmpty }
+        
+        // 这里可以添加代码将食谱保存为 JSON 或存储到您的数据源
+        print("Recipe saved: \(newRecipe)")
+    }
+}
+
+struct MyRecipeView: View{
+    @ObservedObject var user: User
+    @State private var newRecipe: Recipe = Recipe(id: 0, name: "", tags: [], ingredients: [], steps: [])
+    @State private var showingAddRecipe: Bool = false
+    
+    var body: some View {
+        NavigationView{
+            RecipeListView(user:user,recipeID: user.myRecipes)
+                .navigationTitle("My Recipes")
+                .navigationBarItems(trailing: Button(action: {
+                                showingAddRecipe = true
+                            }) {
+                                Image(systemName: "plus")
+                            })
+                            .sheet(isPresented: $showingAddRecipe) {
+                                AddRecipeView(newRecipe: newRecipe)
+                            }
+        }
+    }
+    
+}
+
 struct HomeView: View {
     @ObservedObject var user: User
     let list = [1,2,3,4,5,6,7,8,9,10,11]
@@ -511,5 +694,7 @@ struct SettingsView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+        //MyRecipeView(user: )
+        //AddRecipeView(newRecipe:Recipe(id: 0, name: "", tags: [], ingredients: [], steps: []))
     }
 }
