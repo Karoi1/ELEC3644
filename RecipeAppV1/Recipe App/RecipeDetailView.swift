@@ -49,155 +49,231 @@ struct RecipeDetailView: View {
 
         
     }
-    
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Recipe Name and Favorite Button
-                HStack {
-                    Text(recipe.name)
-                        .font(.largeTitle)
-                        .fontWeight(.bold) // Thickened title
-                    
-                    Spacer() // Push the button to the right
-                    
-                    Button(action: {
-                        // Handle favorite action here
-                        if user.state == .online {
-                            isFavorite.toggle()
-                        }
-                        if user.state == .offline {
-                            ToLoginView = true
-                            print("offline will not save favs")
-                        }
-                    }) {
-                        Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .font(.title2)
-                            .foregroundColor(.red)// Color of the heart
-                    }
-                }
-                .onAppear {
-                    isFavorite = user.favs.contains(recipe.id)
-                }
-                .onDisappear {
-                    updateFavorites()
-                    updateHistory()
-                    user.userDataBase.updateUserData(for:user)
-                }
-                .sheet(isPresented: $ToLoginView){
-                    UserView(user: user,onLoginSuccess:{ToLoginView=false})
-                }
 
-                // Tags
-                HStack {
-                    ForEach(recipe.tags, id: \.self) { tag in
-                        Text(tag)
-                            .padding(5)
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(5)
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                // Top Half - Fixed Image with Title and Favorite Button Overlay
+                let imageName = recipe.id // Assuming images are named by ID
+                ZStack(alignment: .bottom) {
+                    Image(String(imageName))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.height / 3) // Set height to half the screen
+                        .clipped()
+                        .ignoresSafeArea(edges: .horizontal) // Ensure it stretches horizontally but respects vertical safe areas
+                    
+                    // Title and Favorite Button Overlay
+                    ZStack {
+                        // Add a semi-transparent background underlay
+                        Rectangle()
+                            .fill(Color.black.opacity(0.2)) // Black background with 20% opacity
+                            .frame(height: 40) // Set the height for the background rectangle
+                            .edgesIgnoringSafeArea(.horizontal) // Stretch horizontally across the screen
+                        
+                        // Title and Favorite Button
+                        HStack {
+                            // Recipe Title
+                            Text(recipe.name)
+                                .font(.system(size: 24))
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .shadow(radius: 5) // Add shadow for better readability
+                            
+                            Spacer() // Push the favorite button to the right
+                            
+                            // Favorite Button
+                            Button(action: {
+                                // Handle favorite action here
+                                if user.state == .online {
+                                    isFavorite.toggle()
+                                }
+                                if user.state == .offline {
+                                    ToLoginView = true
+                                    print("offline will not save favs")
+                                }
+                            }) {
+                                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                    .font(.title2)
+                                    .foregroundColor(.red)// Color of the heart
+                            }
+                        .onAppear {
+                            isFavorite = user.favs.contains(recipe.id)
+                        }
+                        .onDisappear {
+                            updateFavorites()
+                            updateHistory()
+                            UserDataBase().updateUserData(for:user)
+                        }
+                        .sheet(isPresented: $ToLoginView){
+                            UserView(user: user,onLoginSuccess:{ToLoginView=false})
+                        }
+                            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 3)  // Add shadow around the button
+                        }
+                        .padding([.leading, .trailing], 20) // Add padding around the title and button
                     }
+                    .frame(maxWidth: .infinity) // Ensure the ZStack stretches across the screen // Add padding around the title and button
                 }
                 
-                // Recipe Image
-                let imageName = recipe.id // Assuming you have images named by ID
-                Image(String(imageName))
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 300)
-                    .clipped()
-                    .padding(.bottom, 10)
-
-                // Ingredients
-                Text("Ingredients")
-                    .font(.headline)
-                    .padding(.top, 10)
-                ForEach(recipe.ingredients, id: \.self) { ingredient in
-                    HStack {
-                        Button(action: {
-                            // Toggle the check state for ingredients
-                            if checkedIngredients.contains(ingredient) {
-                                checkedIngredients.remove(ingredient)
-                            } else {
-                                checkedIngredients.insert(ingredient)
+                // Bottom Half - Scrollable Content
+                VStack {
+                    Spacer()
+                        .frame(height: geometry.size.height / 3) // Push content below the image
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Tags with Top Padding
+                            HStack {
+                                ForEach(recipe.tags, id: \.self) { tag in
+                                    Text(tag)
+                                        .padding(5)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(5)
+                                }
                             }
-                        }) {
-                            Image(systemName: checkedIngredients.contains(ingredient) ? "checkmark.square.fill" : "square")
+                            .padding([.horizontal, .top], 20) // Add top padding here
+
+                            // Ingredients
+                            Text("Ingredients")
+                                .font(.headline)
+                                .padding([.top, .horizontal])
+                            ForEach(recipe.ingredients, id: \.self) { ingredient in
+                                HStack {
+                                    Button(action: {
+                                        // Toggle the check state for ingredients
+                                        if checkedIngredients.contains(ingredient) {
+                                            checkedIngredients.remove(ingredient)
+                                        } else {
+                                            checkedIngredients.insert(ingredient)
+                                        }
+                                    }) {
+                                        Image(systemName: checkedIngredients.contains(ingredient) ? "checkmark.square.fill" : "square")
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    
+                                    Text(ingredient)
+                                        .strikethrough(checkedIngredients.contains(ingredient), color: .black)
+                                }
+                                .padding(.horizontal)
+                            }
+
+                            // Steps
+                            Text("Steps")
+                                .font(.headline)
+                                .padding([.top, .horizontal], 40)
+                            ForEach(recipe.steps, id: \.self) { step in
+                                HStack {
+                                    Button(action: {
+                                        // Toggle the check state for steps
+                                        if checkedSteps.contains(step) {
+                                            checkedSteps.remove(step)
+                                        } else {
+                                            checkedSteps.insert(step)
+                                        }
+                                    }) {
+                                        Image(systemName: checkedSteps.contains(step) ? "checkmark.square.fill" : "square")
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    
+                                    Text(step)
+                                        .strikethrough(checkedSteps.contains(step), color: .black)
+                                }
+                                .padding(.horizontal)
+                            }
+
+                            // Timer
+                            VStack(alignment: .center, spacing: 20) {
+                                
+                                // Timer Display
+                                HStack {
+                                    Spacer() // Center the label
+                                    Text(timerLabel)
+                                        .font(.system(size: 25, weight: .bold, design: .rounded))
+                                        .foregroundColor(isTimerRunning ? .green : .gray)
+                                        .padding()
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.blue.opacity(0.1))
+                                        )
+                                    Spacer() // Center the label
+                                }
+                                
+                                // Timer Picker
+                                HStack(spacing: 15) {
+                                    // Hour Picker
+                                    VStack {
+                                        Text("Hours")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        Picker("", selection: $selectedHours) {
+                                            ForEach(0..<24) { hour in
+                                                Text("\(hour) h").tag(hour)
+                                            }
+                                        }
+                                        .pickerStyle(WheelPickerStyle())
+                                        .frame(width: 60, height: 100) // Adjust size
+                                        .clipped()
+                                    }
+
+                                    // Minute Picker
+                                    VStack {
+                                        Text("Minutes")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        Picker("", selection: $selectedMinutes) {
+                                            ForEach(0..<60) { minute in
+                                                Text("\(minute) m").tag(minute)
+                                            }
+                                        }
+                                        .pickerStyle(WheelPickerStyle())
+                                        .frame(width: 60, height: 100)
+                                        .clipped()
+                                    }
+
+                                    // Second Picker
+                                    VStack {
+                                        Text("Seconds")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        Picker("", selection: $selectedSeconds) {
+                                            ForEach(0..<60) { second in
+                                                Text("\(second) s").tag(second)
+                                            }
+                                        }
+                                        .pickerStyle(WheelPickerStyle())
+                                        .frame(width: 60, height: 100)
+                                        .clipped()
+                                    }
+                                }
+                                .padding(.vertical)
+                                
+                                // Timer Controls
+                                HStack(spacing: 20) {
+                                    Spacer()
+                                    Button(action: {
+                                        startTimer()
+                                    }) {
+                                        Text(isTimerRunning ? "Stop Timer" : "Start Timer")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .padding()
+                                            .frame(maxWidth: .infinity)
+                                            .background(isTimerRunning ? Color.red : Color.blue)
+                                            .cornerRadius(10)
+                                    }
+                                    Spacer()
+                                }
+                            }
+                            .padding([.horizontal, .bottom],40)
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Text(ingredient)
-                            .strikethrough(checkedIngredients.contains(ingredient), color: .black)
+                        .padding(.bottom) // Add bottom padding for better scrolling experience
+                        .background(
+                            NotebookBackground() // Use the notebook background
+                        )
                     }
-                }
-
-                // Steps
-                Text("Steps")
-                    .font(.headline)
-                    .padding(.top, 10)
-                ForEach(recipe.steps, id: \.self) { step in
-                    HStack {
-                        Button(action: {
-                            // Toggle the check state for steps
-                            if checkedSteps.contains(step) {
-                                checkedSteps.remove(step)
-                            } else {
-                                checkedSteps.insert(step)
-                            }
-                        }) {
-                            Image(systemName: checkedSteps.contains(step) ? "checkmark.square.fill" : "square")
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Text(step)
-                            .strikethrough(checkedSteps.contains(step), color: .black)
-                    }
-                }
-                Spacer()
-                Text("Timer: " + timerLabel)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.blue)
-                // Timer Input and Control
-                VStack(spacing: 10) {
-                    HStack {
-                        // Hour Picker
-                        Picker("Hours", selection: $selectedHours) {
-                            ForEach(0..<24) { hour in
-                                Text("\(hour) h").tag(hour)
-                            }
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(width: 80)
-
-                        // Minute Picker
-                        Picker("Minutes", selection: $selectedMinutes) {
-                            ForEach(0..<60) { minute in
-                                Text("\(minute) m").tag(minute)
-                            }
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(width: 80)
-
-                        // Second Picker
-                        Picker("Seconds", selection: $selectedSeconds) {
-                            ForEach(0..<60) { second in
-                                Text("\(second) s").tag(second)
-                            }
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(width: 80)
-                        
-                        Button(action: {
-                            startTimer()
-                        }) {
-                            Text(isTimerRunning ? "Stop Timer" : "Start Timer")
-                        }
-                        .buttonStyle(BorderlessButtonStyle())
-                    }
+                    .background(Color.white)
+                    .cornerRadius(2, corners: [.topLeft, .topRight]) // Rounded corners for the scrollable section
                 }
             }
-            .padding()
         }
     }
 
@@ -234,4 +310,52 @@ struct RecipeDetailView: View {
 
 #Preview {
     ContentView()
+}
+
+extension View {
+    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = 0.0
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
+    }
+}
+
+struct NotebookBackground: View {
+    var body: some View {
+        GeometryReader { geometry in
+            let lineSpacing: CGFloat = 40 // Spacing between the notebook lines
+            let numberOfLines = Int(geometry.size.height / lineSpacing)
+            
+            Canvas { context, size in
+                for i in 0..<numberOfLines {
+                    let yPosition = CGFloat(i) * lineSpacing
+                    var path = Path()
+                    path.move(to: CGPoint(x: 0, y: yPosition))
+                    path.addLine(to: CGPoint(x: size.width, y: yPosition))
+                    
+                    context.stroke(
+                        path,
+                        with: .color(.gray.opacity(0.19)),
+                        style: StrokeStyle(
+                            lineWidth: 1,
+                            dash: [5, 5] // Dotted pattern: 5 points on, 5 points off
+                        )
+                    )
+                }
+            }
+        }
+        .background(Color(red: 0.99, green: 0.99, blue: 0.99)) // Light beige background
+    }
 }
