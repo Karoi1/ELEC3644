@@ -82,20 +82,17 @@ class UserDataBase{
         loadUserFromJson()
     }
     
-    private func loadUserFromJson(){
-        guard let url = Bundle.main.url(forResource: "UserData", withExtension: "json") else {
-                    print("User JSON file not found.")
-                    return
-                }
-                
-                do {
-                    print("Load User Json success.")
-                    let data = try Data(contentsOf: url)
-                    let users = try JSONDecoder().decode([UserData].self, from: data)
-                    self.listUserData = users
-                } catch {
-                    print("Error loading or decoding user data: \(error)")
-                }
+    private func loadUserFromJson() {
+        let url = getDocumentsDirectory().appendingPathComponent("UserData.json")
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let users = try JSONDecoder().decode([UserData].self, from: data)
+            self.listUserData = users
+            print("Load User JSON success.")
+        } catch {
+            print("Error loading or decoding user data: \(error.localizedDescription)")
+        }
     }
     
     func validateUser(username: String, password: String) -> LoginResult {
@@ -116,15 +113,14 @@ class UserDataBase{
             
             print("User data updated for user ID: \(user.id)")
         } else {
-            // 如果没有找到，可能需要添加新用户或处理错误
             print("User with ID \(user.id) not found in userDataList.")
         }
         saveUserData(users: listUserData)
     }
     private func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return paths[0]
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
+    
     func saveUserData(users: [UserData]) {
         let url = getDocumentsDirectory().appendingPathComponent("UserData.json")
 
@@ -133,10 +129,27 @@ class UserDataBase{
             encoder.outputFormatting = .prettyPrinted // 美化输出
             let data = try encoder.encode(users)
             try data.write(to: url)
-            print("User data saved successfully.")
+            print("User data saved successfully to \(url.path)")
         } catch {
-            print("Error writing user data: \(error)")
+            print("Error writing user data: \(error.localizedDescription)")
         }
+    }
+    
+    func registerUser(inputName: String, inputPassword: String) -> UserData {
+        // 检查用户名是否已存在
+        for user in listUserData {
+            if user.name == inputName {
+                print("Username '\(inputName)' already exists.")
+                return UserData(id: -1, name: "", password: "", favourites: [], history: []) // 用户名已存在，注册失败
+            }
+        }
+        
+        // 创建新的 UserData 对象
+        let newUser = UserData(id: listUserData.count + 1, name: inputName, password: inputPassword,favourites: [], history: [])
+        listUserData.append(newUser)
+        saveUserData(users: listUserData)
+        print("User '\(inputName)' registered successfully.")
+        return newUser // 注册成功
     }
 }
 
@@ -209,6 +222,7 @@ struct RegisterView: View {
     @State private var confirmPassWord: String = "" // 新增确认密码输入
     @State private var registrationSuccess: Bool = false
     @State private var passwordsUnMatch: Bool = false // 检查密码是否匹配
+    @State private var nameExists: Bool = false
 
     func register() {
         // 检查密码是否匹配
@@ -218,8 +232,11 @@ struct RegisterView: View {
         }
 
         // 创建 UserData 对象并设置 ID 为 10
-        let newUserData = UserDataBase.UserData(id: 10, name: inputUserName, password: inputPassWord, favourites: [], history: [])
-
+        let newUserData = UserDataBase().registerUser(inputName: inputUserName, inputPassword: inputPassWord)
+        if newUserData.id == -1{
+            nameExists = true
+            return
+        }
         // 在 User 对象中保存用户信息
         user.state = .online
         user.id = newUserData.id
@@ -287,10 +304,14 @@ struct RegisterView: View {
                                 .cornerRadius(10)
                 }
                             .padding(.vertical, 10)
+                if passwordsUnMatch{
+                    Text("2 Inputted Passwords are not the same")
+                        .foregroundColor(.red)
+                }
             }
         }
-        .alert(isPresented:$passwordsUnMatch){
-            Alert(title: Text("Confirm Password"), message: Text("2 Inputted Passwords are not the same"), dismissButton: .default(Text("OK")))
+        .alert(isPresented:$nameExists){
+            Alert(title: Text("Username Already Exists"), message: Text("Please choose another username"), dismissButton: .default(Text("OK")))
         }
     }
 }
