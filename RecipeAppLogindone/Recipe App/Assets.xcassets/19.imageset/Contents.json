@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "A_beautifully_arranged_platter_of_roasted_vegetables_featuring_a_variety_of_colorful_vegetables_such_as_carrots_bell_peppers_zucchini_and_Brussels_sprouts_The_vegetables_are_golden_brown_and_glistening_with_olive_oil_seasoned_with_herbs_li.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

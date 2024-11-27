@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "A_freshly_baked_banana_bread_loaf_sliced_to_reveal_its_moist_interior_filled_with_ripe_banana_chunks_and_walnuts_The_crust_is_golden_brown_and_slightly_glossy_The_bread_is_placed_on_a_wooden_cutting_board_with_a_few_scattered_walnuts_and_a.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

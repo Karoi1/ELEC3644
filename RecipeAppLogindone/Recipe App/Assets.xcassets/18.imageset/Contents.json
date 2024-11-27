@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "Cheesy_Garlic_Bread_golden_and_crispy_topped_with_melted_cheese_and_fresh_parsley_served_on_a_wooden_cutting_board_.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

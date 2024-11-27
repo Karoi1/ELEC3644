@@ -1,0 +1,31 @@
+    [
+        
+        {
+            "id": 1,
+            "name": "Cecilia",
+            "password": "123",
+            "favourites": [1,2,3],
+            "history": [3,2,1]
+        },
+        {
+            "id": 2,
+            "name": "John",
+            "password": "PW",
+            "favourites": [4,5,6,7],
+            "history": [1,2,3,4]
+        },
+        {
+            "id": 3,
+            "name": "",
+            "password": "",
+            "favourites": [1,2,3,4],
+            "history": [3,2,1]
+        },
+        {
+            "id": 4,
+            "name": "matt",
+            "password": "200326",
+            "favourites": [1,2,3,4],
+            "history": [3,2,1]
+        }
+    ]

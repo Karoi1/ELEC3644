@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "A_hearty_bowl_of_chili_con_carne_filled_with_a_rich_thick_mixture_of_ground_beef_kidney_beans_and_diced_tomatoes_The_chili_is_garnished_with_chopped_green_onions_and_a_dollop_of_sour_cream_A_few_tortilla_chips_are_placed_on_the_side_for_di.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

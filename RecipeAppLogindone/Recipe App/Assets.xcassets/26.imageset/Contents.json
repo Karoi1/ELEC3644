@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "A_plate_of_golden_brown_coconut_macaroons_beautifully_arranged_with_a_glossy_chocolate_drizzle_on_top_The_macaroons_are_chewy_and_textured_showcasing_the_shredded_coconut_The_background_features_a_rustic_wooden_table_and_there_are_a_few_co.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
