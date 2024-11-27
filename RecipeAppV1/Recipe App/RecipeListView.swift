@@ -10,6 +10,7 @@ struct MySwiftUIApp: App {
 }
 
 struct RecipeListView: View {
+    @ObservedObject var user: User
     @StateObject var viewModel = RecipeViewModel()
     var recipeID: [Int]
 
@@ -22,7 +23,7 @@ struct RecipeListView: View {
 
             LazyVGrid(columns: columns, spacing: 20) {
                 ForEach(viewModel.search(ListID: recipeID)) { recipe in
-                    NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                    NavigationLink(destination: RecipeDetailView(user:user,recipe: recipe)) {
                         RecipeRowView(recipe: recipe)
                     }
                 }
@@ -37,5 +38,5 @@ struct RecipeListView: View {
 
 
 #Preview {
-    RecipeListView(recipeID: [1,2,3,4,5,6,7,8,9,10,11])
+    RecipeListView(user:User(),recipeID: [1,2,3,4,5,6,7,8,9,10,11])
 }
