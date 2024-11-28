@@ -225,6 +225,7 @@ class User: ObservableObject{
         
     }
     func logout(){
+        UserDataBase().updateUserData(for: self)
         self.state = .offline
         self.img = ""
         self.id = -1
@@ -444,6 +445,7 @@ struct OnlineView: View{
     }
     func rollImage(){
         user.img = "U"+String(Int.random(in:1...5))
+        UserDataBase().updateUserData(for: user)
     }
     
     var body: some View{
