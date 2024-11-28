@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "A_vibrant_Vegetable_Stir_Fry_featuring_colorful_bell_peppers_broccoli_and_carrots_beautifully_arranged_in_a_bowl_.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

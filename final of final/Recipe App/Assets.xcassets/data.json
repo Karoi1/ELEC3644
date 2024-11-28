@@ -1,0 +1,32 @@
+
+1.用image picker给editrecipeview和addrecipeview增加一个image选择
+2. 保存image，必须使用getdocumentaryDirectory来保存。
+3. Image（）不一定可以接收刚刚保存的image，因为没有保存进asset。问ai
+可问：如果我有一条url指向一个image，如何把这个image现实在view里面
+3. 给用户添加头像
+3，1 给用户选择一些基础头像。给assets里加上一些默认头像。首先要给user类和userdata类里面加上一个Image：“String”来表示用户选择了什么头像。注意各种function，例如register时给一个默认头像，login时要把userdata的image传入user。
+
+3，2 如果刚才做好了image picker，可以让用户再选择自定义头像
+3.3在主页点击头像的时候就可以跳出一个小界面，让用户选择头像。例如先选择是从photolibrary选择，还是从默认基础头像里选择。然后再跳转到对应的选择view里
+
+
+Introduction of the user interface
+1. Recipe Detailed View
+- Components(name/tags/ingredients/steps)
+- New features (Built-in Timer/Add to favourite)
+
+2. List and Row View
+- Use grids to make 2 coloums of recipe
+
+
+
+List of Features:
+1. Interact With Json File
+2. Search by Text
+3. Search by image classifier
+4. User account system, login, logout, register
+5. Add to favourite
+6. Record History Browsing
+7. User upload their own recipe
+8. User can edit their recipe
+

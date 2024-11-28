@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "A_vibrant_plate_of_pesto_pasta_featuring_al_dente_spaghetti_coated_in_a_rich_green_basil_pesto_sauce_The_dish_is_garnished_with_freshly_grated_Parmesan_cheese_pine_nuts_and_a_sprinkle_of_black_pepper_The_background_includes_a_rustic_wooden.jpeg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
